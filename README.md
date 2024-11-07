@@ -1,6 +1,6 @@
 # Instructions to run
 
-Once the repository is cloned, you will have to install two sets of modules.
+Once the repository is cloned, you can use an environment with the same packages as `ml2024`, but will have to install two additional modules.
 First is torch
 
 ```bash
@@ -18,5 +18,5 @@ You may also need to install numpy
 To run, enter into the src directory and run the following command
 
 ```bash
-py train_pytorch.py --lr 0.1 --epochs 15 --net Net1 --data-dir ../data/oracle/
+py train_pytorch.py --lr 0.1 --epochs 15 --net Net2 --data-dir ../data/oracle/
 ```
