@@ -1,6 +1,7 @@
 # Instructions to run
 
 Once the repository is cloned, you can use an environment with the same packages as `ml2024`, but will have to install two additional modules.
+
 First is torch
 
 ```bash
@@ -13,14 +14,14 @@ Second is torchvision
 pip install torchvision
 ```
 
-You may also need to install numpy
+For other environments, you may also need to install numpy
 
 To run, enter into the src directory and run the following command
 
 ```bash
-py train_pytorch.py --lr 0.1 --epochs 15 --net Net2 --data-dir ../data/oracle/
+python3 train_pytorch.py --lr 0.1 --epochs 15 --net Net2 --data-dir ../data/oracle/
 ```
-Output:
+Expected Output:
 ```bash
 The size of train set: 27222
 The size of t10k set: 3000
@@ -70,7 +71,7 @@ Train Epoch: 1 [26880/27222 (99%)]      Loss: 0.483209
 
 Test set: Average loss: 0.4349, Accuracy: 2572/3000 (85.7%)
 ```
-Time per Epoch:
+Average training time per epoch:
 ```bash
 30.63 seconds
 ```
