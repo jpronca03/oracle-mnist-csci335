@@ -19,7 +19,7 @@ For other environments, you may also need to install numpy
 To run, enter into the src directory and run the following command
 
 ```bash
-python3 train_pytorch.py --lr 0.1 --epochs 15 --net Net2 --data-dir ../data/oracle/
+python3 train_pytorch.py --lr 0.1 --epochs 15 --data-dir ../data/oracle/ --kernel_size original --dropout 0.2
 ```
 Expected Output:
 ```bash

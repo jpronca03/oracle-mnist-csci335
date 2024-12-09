@@ -12,7 +12,7 @@ import mnist_reader
 
 class Net2(nn.Module):
 
-    def __init__(self, kernel_size, droupout):
+    def __init__(self, kernel_size, dropout):
         super(Net2, self).__init__()
         self.conv1 = torch.nn.Sequential(torch.nn.Conv2d(1, 64, kernel_size=3, stride=1, padding=1),
                                          torch.nn.MaxPool2d(stride=2, kernel_size=2),
@@ -22,7 +22,7 @@ class Net2(nn.Module):
                                          torch.nn.ReLU())
         self.dense = torch.nn.Sequential(torch.nn.Linear(7 * 7 * 128, 1024),
                                          torch.nn.ReLU(),
-                                         torch.nn.Dropout(p=droupout),
+                                         torch.nn.Dropout(p=dropout),
                                          torch.nn.Linear(1024, 10))
 
     def forward(self, x):
@@ -120,10 +120,9 @@ def main():
     test_loader = torch.utils.data.DataLoader(test_data, batch_size=args.test_batch_size, shuffle=False, **kwargs)
 
     for rate in args.dropout:
-        if rate == 0.1:
+        dropout = 0.2
+        if rate == '0.1':
             dropout = 0.1
-        elif rate == '0.2':
-            dropout = 0.2
         elif rate == '0.5':
             dropout = 0.5
             
@@ -134,7 +133,7 @@ def main():
                 pass
             elif size == 'large':
                 pass
-        model = Net2().to(device)
+        model = Net2(args.kernel, dropout).to(device)
         optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
 
         for epoch in range(1, args.epochs + 1):
