@@ -9,28 +9,10 @@ from torch.utils.data import Dataset
 from torchvision import datasets, transforms
 import mnist_reader
 
-class Net1(nn.Module):
-    def __init__(self):
-        super(Net1, self).__init__()
-        self.conv1 = nn.Conv2d(1, 20, 5, 1)
-        self.conv2 = nn.Conv2d(20, 50, 5, 1)
-        self.fc1 = nn.Linear(4 * 4 * 50, 500)
-        self.fc2 = nn.Linear(500, 10)
-
-    def forward(self, x):
-        x = F.relu(self.conv1(x))
-        x = F.max_pool2d(x, 2, 2)
-        x = F.relu(self.conv2(x))
-        x = F.max_pool2d(x, 2, 2)
-        x = x.view(-1, 4 * 4 * 50)
-        x = F.relu(self.fc1(x))
-        x = self.fc2(x)
-        return F.log_softmax(x, dim=1)
-
 
 class Net2(nn.Module):
 
-    def __init__(self):
+    def __init__(self, kernel_size, droupout):
         super(Net2, self).__init__()
         self.conv1 = torch.nn.Sequential(torch.nn.Conv2d(1, 64, kernel_size=3, stride=1, padding=1),
                                          torch.nn.MaxPool2d(stride=2, kernel_size=2),
@@ -40,7 +22,7 @@ class Net2(nn.Module):
                                          torch.nn.ReLU())
         self.dense = torch.nn.Sequential(torch.nn.Linear(7 * 7 * 128, 1024),
                                          torch.nn.ReLU(),
-                                         torch.nn.Dropout(p=0.2),
+                                         torch.nn.Dropout(p=droupout),
                                          torch.nn.Linear(1024, 10))
 
     def forward(self, x):
@@ -49,21 +31,6 @@ class Net2(nn.Module):
         x = self.dense(x)
         return F.log_softmax(x, dim=1)
 
-
-class Net3(nn.Module):
-    def __init__(self):
-        super(Net3, self).__init__()
-        self.conv1 = nn.Conv2d(1, 20, 5, 1)
-        self.fc1 = nn.Linear(12 * 12 * 20, 500)
-        self.fc2 = nn.Linear(500, 10)
-
-    def forward(self, x):
-        x = F.relu(self.conv1(x))
-        x = F.max_pool2d(x, 2, 2)
-        x = x.view(-1, 12 * 12 * 20)
-        x = F.relu(self.fc1(x))
-        x = self.fc2(x)
-        return F.log_softmax(x, dim=1)
 
 class ImageList(Dataset):
 
@@ -122,7 +89,8 @@ def main():
     parser.add_argument('--batch-size', type=int, default=64, metavar='N', help='input batch size for training (default: 64)')
     parser.add_argument('--test-batch-size', type=int, default=300, metavar='N', help='input batch size for testing (default: 300)')
     parser.add_argument('--epochs', type=int, default=15, metavar='N', help='number of epochs to train (default: 15)')
-    parser.add_argument('--net', type=str, default='Net1', choices=["Net1", "Net2", "Net3"], help='type of network')
+    parser.add_argument('--dropout', type=str, default='0.2', choices=['0.1', '0.2', '0.5'])
+    parser.add_argument('--kernel', type=str, default='original', choices=['small', 'original', 'large'])
     parser.add_argument('--lr', type=float, default=0.1, metavar='LR', help='learning rate (default: 0.1)')
     parser.add_argument('--momentum', type=float, default=0.5, metavar='M', help='SGD momentum (default: 0.5)')
     parser.add_argument('--data-dir', type=str, default='../data/oracle/', help='data path')
@@ -151,19 +119,29 @@ def main():
                           ]))
     test_loader = torch.utils.data.DataLoader(test_data, batch_size=args.test_batch_size, shuffle=False, **kwargs)
 
-    if args.net == 'Net1':
-        model = Net1().to(device)
-    elif args.net == 'Net2':
+    for rate in args.dropout:
+        if rate == 0.1:
+            dropout = 0.1
+        elif rate == '0.2':
+            dropout = 0.2
+        elif rate == '0.5':
+            dropout = 0.5
+            
+        for size in args.kernel:
+            if size == 'small':
+                pass
+            elif size == 'original':
+                pass
+            elif size == 'large':
+                pass
         model = Net2().to(device)
-    else:
-        model = Net3().to(device)
-    optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
+        optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
 
-    for epoch in range(1, args.epochs + 1):
-        train(args, model, device, train_loader, optimizer, epoch)
-        test(args, model, device, test_loader)
+        for epoch in range(1, args.epochs + 1):
+            train(args, model, device, train_loader, optimizer, epoch)
+            test(args, model, device, test_loader)
 
-    if (args.save_model):
-        torch.save(model.state_dict(), "mnist_cnn.pt")
+        if (args.save_model):
+            torch.save(model.state_dict(), f"mnist_cnn_{dropout}_{dropout}.pt")
 
 main()
