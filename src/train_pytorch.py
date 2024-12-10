@@ -14,6 +14,8 @@ class Net2(nn.Module):
 
     def __init__(self, kernel_size, dropout):
         super(Net2, self).__init__()
+        self.kernel_size = kernel_size
+        self.dropout = dropout
         self.conv1 = torch.nn.Sequential(torch.nn.Conv2d(1, 64, kernel_size=3, stride=1, padding=1),
                                          torch.nn.MaxPool2d(stride=2, kernel_size=2),
                                          torch.nn.ReLU(),
@@ -30,6 +32,9 @@ class Net2(nn.Module):
         x = x.view(-1, 7 * 7 * 128)
         x = self.dense(x)
         return F.log_softmax(x, dim=1)
+    
+    def get_name(self):
+        return f"{self.kernel_size}_{self.kernel_size}_{self.dropout}"
 
 
 class ImageList(Dataset):
@@ -52,6 +57,7 @@ class ImageList(Dataset):
 
 def train(args, model, device, train_loader, optimizer, epoch):
     model.train()
+    results = f"{model.get_name()}"
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
@@ -63,6 +69,10 @@ def train(args, model, device, train_loader, optimizer, epoch):
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(data), len(train_loader.dataset),
                        100. * batch_idx / len(train_loader), loss.item()))
+            results += f",{loss.item()}"
+    results += "\n"
+    with open("\\results\\epoch_losses.csv", "a") as file:
+        file.write(results)
 
 
 def test(args, model, device, test_loader):
@@ -133,14 +143,14 @@ def main():
                 pass
             elif size == 'large':
                 pass
-        model = Net2(args.kernel, dropout).to(device)
-        optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
+            model = Net2(args.kernel, dropout).to(device)
+            optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
 
-        for epoch in range(1, args.epochs + 1):
-            train(args, model, device, train_loader, optimizer, epoch)
-            test(args, model, device, test_loader)
+            for epoch in range(1, args.epochs + 1):
+                train(args, model, device, train_loader, optimizer, epoch)
+                test(args, model, device, test_loader)
 
-        if (args.save_model):
-            torch.save(model.state_dict(), f"mnist_cnn_{dropout}_{dropout}.pt")
+            if (args.save_model):
+                torch.save(model.state_dict(), f"{model.get_name()}.pt")
 
 main()
