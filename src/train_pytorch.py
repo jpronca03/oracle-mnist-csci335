@@ -7,6 +7,7 @@ import torch.optim as optim
 from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import datasets, transforms
+from msg_debug import Debug as db 
 import mnist_reader
 
 
@@ -16,10 +17,10 @@ class Net2(nn.Module):
         super(Net2, self).__init__()
         self.kernel_size = kernel_size
         self.dropout = dropout
-        self.conv1 = torch.nn.Sequential(torch.nn.Conv2d(1, 64, kernel_size=3, stride=1, padding=1),
+        self.conv1 = torch.nn.Sequential(torch.nn.Conv2d(1, 64, kernel_size=kernel_size, stride=1, padding=1),
                                          torch.nn.MaxPool2d(stride=2, kernel_size=2),
                                          torch.nn.ReLU(),
-                                         torch.nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1),
+                                         torch.nn.Conv2d(64, 128, kernel_size=kernel_size, stride=1, padding=1),
                                          torch.nn.MaxPool2d(stride=2, kernel_size=2),
                                          torch.nn.ReLU())
         self.dense = torch.nn.Sequential(torch.nn.Linear(7 * 7 * 128, 1024),
@@ -137,13 +138,12 @@ def main():
             dropout = 0.5
             
         for size in args.kernel:
+            kernel_size = 3
             if size == 'small':
-                pass
-            elif size == 'original':
-                pass
+                kernel_size = 2
             elif size == 'large':
-                pass
-            model = Net2(args.kernel, dropout).to(device)
+                kernel_size = 4
+            model = Net2(kernel_size, dropout).to(device)
             optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
 
             for epoch in range(1, args.epochs + 1):
