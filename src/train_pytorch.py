@@ -58,7 +58,6 @@ class ImageList(Dataset):
 
 def train(args, model, device, train_loader, optimizer, epoch):
     model.train()
-    results = f"{model.get_name()}"
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
@@ -69,11 +68,7 @@ def train(args, model, device, train_loader, optimizer, epoch):
         if batch_idx % args.log_interval == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(data), len(train_loader.dataset),
-                       100. * batch_idx / len(train_loader), loss.item()))
-            results += f",{loss.item()}"
-    results += "\n"
-    with open("\\results\\epoch_losses.csv", "a") as file:
-        file.write(results)
+                       100. * batch_idx / len(train_loader), loss.item()))    
 
 
 def test(args, model, device, test_loader):
@@ -93,6 +88,20 @@ def test(args, model, device, test_loader):
     print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.1f}%)\n'.format(
         test_loss, correct, len(test_loader.dataset),
         100. * correct / len(test_loader.dataset)))
+    
+    return 100. * correct / len(test_loader.dataset)
+    
+    
+def test_classes(args, model, device, test_loader):
+    model.eval()
+    with torch.no_grad():
+        for data, target in test_loader:
+            data, target = data.to(device), target.to(device)
+            output = model(data)
+            pred = output.argmax(dim=1, keepdim=True)
+            db.check("pred", pred)
+            correct += pred.eq(target.view_as(pred)).sum().item()
+    
 
 
 def main():
@@ -100,8 +109,8 @@ def main():
     parser.add_argument('--batch-size', type=int, default=64, metavar='N', help='input batch size for training (default: 64)')
     parser.add_argument('--test-batch-size', type=int, default=300, metavar='N', help='input batch size for testing (default: 300)')
     parser.add_argument('--epochs', type=int, default=15, metavar='N', help='number of epochs to train (default: 15)')
-    parser.add_argument('--dropout', type=str, default='0.2', choices=['0.1', '0.2', '0.5'])
-    parser.add_argument('--kernel', type=str, default='original', choices=['small', 'original', 'large'])
+    parser.add_argument('--dropout', type=str, default=['0.2'], choices=['0.1', '0.2', '0.5'])
+    parser.add_argument('--kernel', type=str, default=['original'], choices=['small', 'original', 'large'])
     parser.add_argument('--lr', type=float, default=0.1, metavar='LR', help='learning rate (default: 0.1)')
     parser.add_argument('--momentum', type=float, default=0.5, metavar='M', help='SGD momentum (default: 0.5)')
     parser.add_argument('--data-dir', type=str, default='../data/oracle/', help='data path')
@@ -146,9 +155,20 @@ def main():
             model = Net2(kernel_size, dropout).to(device)
             optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
 
+            results = f"{model.get_name()}"
             for epoch in range(1, args.epochs + 1):
                 train(args, model, device, train_loader, optimizer, epoch)
-                test(args, model, device, test_loader)
+                
+                # get epoch accuracy and add to output
+                result = test(args, model, device, test_loader)
+                results += f"{result},"
+                
+                # if final epoch, test class-specific accuracies
+                if epoch == args.epochs:
+                    test_classes(args, model, device, test_loader)
+            results += "\n"
+            with open("/results/epoch_training_test_accuracies.csv", "a") as file:
+                file.write(results)
 
             if (args.save_model):
                 torch.save(model.state_dict(), f"{model.get_name()}.pt")
