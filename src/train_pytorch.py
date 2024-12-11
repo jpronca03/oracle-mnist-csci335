@@ -94,15 +94,28 @@ def test(args, model, device, test_loader):
     
 def test_classes(args, model, device, test_loader):
     model.eval()
+    num_correct = np.zeros((10))
+    totals = np.zeros((10))
     with torch.no_grad():
         for data, target in test_loader:
             data, target = data.to(device), target.to(device)
             output = model(data)
             pred = output.argmax(dim=1, keepdim=True)
-            db.check("pred", pred)
-            correct += pred.eq(target.view_as(pred)).sum().item()
-    
-
+            
+            # combine predictions and correct labels into one tensor
+            results = torch.cat((pred, target.view_as(pred)), dim=1).numpy()
+            # sort tensor by target label
+            results = results[np.argsort(results[:, 1])]
+            # break up results by target label
+            split_results = [results[results[:, 1] == label] for label in range(0, 10)]
+            # for each class, calculate the accuracy
+            for i in range(0, 10):
+                class_results = split_results[i]
+                class_length = class_results.shape[0]
+                num_correct[i] += np.sum(class_results[:, 0] == class_results[:, 1])
+                totals[i] += class_results.shape[0]
+    correct = num_correct / totals
+    return correct
 
 def main():
     parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
@@ -123,6 +136,7 @@ def main():
     use_cuda = args.use_cuda and torch.cuda.is_available()
     torch.manual_seed(args.seed)
     device = torch.device("cuda" if use_cuda else "cpu")
+    db.msg(f"Using {device}.")
     kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
 
     train_data = ImageList(path=args.data_dir, kind='train',
@@ -161,14 +175,20 @@ def main():
                 
                 # get epoch accuracy and add to output
                 result = test(args, model, device, test_loader)
-                results += f"{result},"
+                results += f",{result}"
                 
                 # if final epoch, test class-specific accuracies
                 if epoch == args.epochs:
-                    test_classes(args, model, device, test_loader)
+                    class_accuracies = test_classes(args, model, device, test_loader)
+                    with open("results/model_class_accuracies.csv", "a") as class_file:
+                        class_out = f"{model.get_name()},{result}"
+                        for acc in class_accuracies:
+                            class_out += f",{acc}"
+                        class_out += "\n"
+                        class_file.write(class_out)
             results += "\n"
-            with open("/results/epoch_training_test_accuracies.csv", "a") as file:
-                file.write(results)
+            with open("results/epoch_training_test_accuracies.csv", "a") as epoch_file:
+                epoch_file.write(results)
 
             if (args.save_model):
                 torch.save(model.state_dict(), f"{model.get_name()}.pt")
