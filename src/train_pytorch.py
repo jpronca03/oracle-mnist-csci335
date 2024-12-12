@@ -118,12 +118,16 @@ def test_classes(args, model, device, test_loader):
             results = results[np.argsort(results[:, 1])]
             # break up results by target label
             split_results = [results[results[:, 1] == label] for label in range(0, 10)]
+
+            testset_results = np.zeros((0,2))
             # for each class, calculate the accuracy
             for i in range(0, 10):
                 class_results = split_results[i]
-                class_length = class_results.shape[0]
                 num_correct[i] += np.sum(class_results[:, 0] == class_results[:, 1])
+                testset_results = np.vstack([testset_results, class_results[:, [0, 1]]])
                 totals[i] += class_results.shape[0]
+            np.savetxt(f"testset_results/{model.get_name()}.txt",testset_results,fmt='%d',delimiter=' ')
+                
     correct = num_correct / totals
     return correct
 
