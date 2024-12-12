@@ -18,6 +18,11 @@ The dropout rate can be modified with the `dropout` argument:
 python3 train_pytorch.py --lr 0.1 --epochs 15 --dropout 0.1 --data-dir ../data/oracle/
 ```
 
+To run the best model:
+```bash
+python3 train_pytorch.py --lr 0.1 --epochs 15 --k1 large --k2 medium --dropout 0.1 --data-dir ../data/oracle/
+```
+
 Example command to graph the results of each class:
 ```bash
 python3 grapher.py --in-file ./results/model_class_accuracies.csv --out-file ./plots/class_acc.png --graph classes
