@@ -38,7 +38,7 @@ def graph_training_acc(in_file, out_file):
 def graph_class_acc(in_file, out_file):
     # https://stackoverflow.com/questions/21307832/how-to-display-chinese-in-matplotlib-plot
     # Using Microsoft YaHei (one of my faves)
-    font = fm.FontProperties(fname='..\\data\\msyh.ttc') 
+    font = fm.FontProperties(fname='../data/msyh.ttc') 
     
     with open(in_file, "r") as file:
         data = np.genfromtxt(file, delimiter=',')
@@ -74,7 +74,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--in-file', type=str)
     parser.add_argument('--out-file', type=str)
-    parser.add_argument('--read-file', type=str)
+    # parser.add_argument('--read-file', type=str)
     parser.add_argument('--graph', type=str, choices=['training', 'classes'])
     args = parser.parse_args()
     
