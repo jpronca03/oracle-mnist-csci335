@@ -125,6 +125,8 @@ def test_classes(args, model, device, test_loader):
                 class_results = split_results[i]
                 num_correct[i] += np.sum(class_results[:, 0] == class_results[:, 1])
                 testset_results = np.vstack([testset_results, class_results[:, [0, 1]]])
+                character_desired = 195
+                np.savetxt(f"testset_results/{character_desired}.txt",data[character_desired,0],delimiter=',')
                 totals[i] += class_results.shape[0]
             np.savetxt(f"testset_results/{model.get_name()}.txt",testset_results,fmt='%d',delimiter=' ')
                 
