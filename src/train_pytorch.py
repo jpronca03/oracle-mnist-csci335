@@ -125,9 +125,9 @@ def test_classes(args, model, device, test_loader):
                 class_results = split_results[i]
                 num_correct[i] += np.sum(class_results[:, 0] == class_results[:, 1])
                 testset_results = np.vstack([testset_results, class_results[:, [0, 1]]])
-                character_desired = 195
-                np.savetxt(f"testset_results/{character_desired}.txt",data[character_desired,0],delimiter=',')
+                character_desired = 146
                 totals[i] += class_results.shape[0]
+            np.savetxt(f"testset_results/{character_desired}.csv",data[character_desired,0],delimiter=',')
             np.savetxt(f"testset_results/{model.get_name()}.txt",testset_results,fmt='%d',delimiter=' ')
                 
     correct = num_correct / totals
@@ -188,11 +188,12 @@ def main():
                 db.msg(f"Running model with dropout rate of {dropout}, and kernel sizes {kernel_1_size}, {kernel_2_size}")
                     
                 model = Net2(kernel_1_size, kernel_2_size, dropout).to(device)
+                model.load_state_dict(torch.load(f"models/{model.get_name()}.pt", weights_only=True))
                 optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
 
                 results = f"{model.get_name()}"
                 for epoch in range(1, args.epochs + 1):
-                    train(args, model, device, train_loader, optimizer, epoch)
+                    # train(args, model, device, train_loader, optimizer, epoch)
                     
                     # get epoch accuracy and add to output
                     result = test(args, model, device, test_loader)
